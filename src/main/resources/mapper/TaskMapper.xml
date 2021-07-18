@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC ".//mybatis.org//DTD Mapper 3.0//EN"
+        "http:mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jerry.mapper.TaskMapper">
+    <select id="getAllTask" resultType="task">
+        select * from task order by publish_time desc
+    </select>
+    <select id="getAllRunningTask" resultType="task">
+        select * from task where task_state="进行" order by publish_time desc
+    </select>
+    <insert id="insertTask" parameterType="Task">
+        insert into task
+        values(#{task_id},#{user_id},#{publish_time},#{task_state},#{name},#{gender},#{age},#{height},#{description},#{id_card},#{lost_face},#{lost_address},#{lost_time},#{lost_longitude},#{lost_latitude},#{complete_time},#{cancel_time},#{connect_phone})
+    </insert>
+    <delete id="deleteTask" parameterType="int">
+        delete from task where task_id=#{task_id}
+    </delete>
+    
+    <select id="getGroupUserId" parameterType="int" resultType="int">
+        select user_id from task_receiving where task_id=#{task_id}
+    </select>
+    <select id="getTaskByInfo" resultType="task" parameterType="String">
+        select * from task
+        where (task.lost_address LIKE "%${info}%" OR task.description LIKE "%${info}%")
+    </select>
+    <select id="getTaskById" resultType="task" parameterType="int">
+        select * from task where task.task_id=#{task_id}
+    </select>
+    <select id="getMyTask" parameterType="int" resultType="task">
+        select task.* from task_receiving,task where task_receiving.user_id=#{param1} and
+        task_receiving.task_id=task.task_id
+    </select>
+    <select id="getMyPublish" parameterType="int" resultType="task">
+        select * from task where user_id=#{param1}
+    </select>
+    <select id="getTaskByName" resultType="task" parameterType="String">
+        select * from task where task.name=#{name}
+    </select>
+
+    <select id="getId" resultType="int">
+        select if(count(task_id)=0,10000000,max(task_id)+1) from task
+    </select>
+    <update id="completeTask" >
+        update task set task.task_state="结束",task.complete_time=#{param2} where task.task_id=#{param1}
+    </update>
+    <update id="cancelTask" >
+        update task set task.task_state="取消",task.cancel_time=#{param2} where task.task_id=#{param1}
+    </update>
+    <update id="updateTask" parameterType="task">
+        update task set task.name=#{name},task.gender=#{gender},task.age=#{age},
+        task.height=#{height},task.description=#{description},
+        task.id_card=#{id_card},task.lost_address=#{lost_address},task.lost_time=#{lost_time}
+        task.connect_phone=#{connect_phone},task.lost_face=#{lost_face}
+        where task.task_id=#{task_id}
+    </update>
+    <select id="getTaskFace" parameterType="int" resultType="String">
+        select lost_face from task where task_id=#{param1}
+    </select>
+    <update id="setTaskFace"  >
+        update task set lost_face=#{param2} where task_id=#{param1}
+    </update>
+    <insert id="joinTask" >
+        insert into task_receiving values(#{param2},#{param1},#{param3})
+    </insert>
+    <delete id="exitTask" parameterType="int">
+        delete from task_receiving where task_id=#{param2} AND user_id=#{param1}
+    </delete>
+
+
+    <insert id="insertFace">
+        insert into face values(#{param1},#{param2})
+    </insert>
+    <delete id="deleteFace">
+        delete from face where task_id=#{param1} AND face=#{param2}
+    </delete>
+    <update id="updateFace">
+        update face set face=#{param2} where task_id=#{task_id} AND face=#{face}
+    </update>
+    <select id="getFacePath" parameterType="int" resultType="String">
+        select face_path from face where task_id=#{task_id}
+    </select>
+    <insert id="insertTakenFace">
+        insert into face_taken values(#{param1},#{param2},#{param3},#{param4})
+    </insert>
+
+    <select id="isInTask" parameterType="int" resultType="boolean">
+        select #{param1} in (select user_id from task_receiving where task_id=#{param2})
+    </select>
+</mapper>

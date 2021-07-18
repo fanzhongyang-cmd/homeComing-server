@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC ".//mybatis.org//DTD Mapper 3.0//EN"
+        "http:mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jerry.mapper.AccountMapper">
+    <select id="query" resultType="account" parameterType="int">
+        select * from account where user_id=#{user_id}
+    </select>
+    <select id="countTel" resultType="int">
+        select COUNT(*) from user where user_telephone=#{param1}
+    </select>
+    <insert id="addAccount" parameterType="account">
+        insert into account values(#{user_id},#{password},#{role})
+    </insert>
+    <delete id="deleteAccount" parameterType="int">
+        delete from account where user_id=#{param1}
+    </delete>
+    <update id="updatePassword" parameterType="account">
+        update account set password=#{password}
+    </update>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC ".//mybatis.org//DTD Mapper 3.0//EN"
+        "http:mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jerry.mapper.UserMapper">
+    <!--    返回所有user-->
+    <select id="getAllUser" resultType="user">
+        select * from user
+    </select>
+    <!--    通过user_id查询user-->
+    <select id="getUserById" resultType="user" parameterType="int">
+        select * from user where user.user_id=#{user_id}
+    </select>
+    <select id="getUserByTel" resultType="user" parameterType="long">
+        select * from user where user_telephone=#{param1}
+    </select>
+    <select id="getUserByName" resultType="user" parameterType="String">
+        select * from user where user_name Like #{param1}
+    </select>
+    <select id="getUserByGender" resultType="user" parameterType="String">
+        select * from user where user.user_gender=#{param1}
+    </select>
+    <!--    插入user-->
+    <insert id="addUser" parameterType="user">
+        insert into user
+        values(#{user_id},#{user_name},#{user_gender},#{user_age},#{user_telephone},#{user_signature},#{user_face},#{user_state},#{user_longitude},#{user_latitude},#{user_region})
+    </insert>
+    <!--    通过user_id删除user-->
+    <delete id="deleteUser" parameterType="int">
+        delete from user where user.user_id=#{user_id}
+    </delete>
+    <update id="updateUser" parameterType="user">
+        update user set user_name=#{user_name},user_gender=#{user_gender},user_age=#{user_age},
+        user_telephone=#{user_telephone},user_signature=#{user_signature},user_face=#{user_face},
+        user_longitude=#{user_longitude}, user_latitude=#{user_latitude},user_region=#{user_region}
+        where user_id=#{user_id}
+    </update>
+    <update id="changeUserState" parameterType="int">
+        update user set user_state=#{state} where user_id=#{user_id}
+    </update>
+    <select id="getId" resultType="int">
+        select if(count(user_id)=0,20210000,max(user_id)+1) from user
+    </select>
+    <update id="updateUserLocation" parameterType="location">
+        update user set user_longitude=#{longitude},user_latitude=#{latitude} where user_id=#{user_id}
+    </update>
+    <update id="updateUserInfo" parameterType="int">
+        update user set ${param2}=#{param3} where user_id=#{user_id}
+    </update>
+
+    <select id="getIcon" resultType="String" parameterType="int">
+        select user_face from user where user_id=#{param1}
+    </select>
+    <select id="getName" resultType="String" parameterType="int">
+        select user_name from user where user_id=#{param1}
+    </select>
+
+
+</mapper>
+

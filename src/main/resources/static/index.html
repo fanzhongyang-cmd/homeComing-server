@@ -1,0 +1,184 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=gb2312">
+    <title>Web sockets test</title>
+    <style type="text/css">
+        .container
+        {
+            font-family: "Courier New";
+            width: 680px;
+            height: 300px;
+            overflow: auto;
+            border: 1px solid black;
+        }
+
+        .LockOff {
+            display: none;
+            visibility: hidden;
+        }
+
+        .LockOn {
+            display: block;
+            visibility: visible;
+            position: absolute;
+            z-index: 999;
+            top: 0px;
+            left: 0px;
+            width: 1024%;
+            height: 768%;
+            background-color: #ccc;
+            text-align: center;
+            padding-top: 20%;
+            filter: alpha(opacity=75);
+            opacity: 0.75;
+        }
+    </style>
+
+    <script src="./js/jquery-3.1.1.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var port=8088;
+        var ws;
+        var SocketCreated = false;
+        var isUserloggedout = false;
+        var task_id;
+        var user_id;
+
+        function lockOn(str)
+        {
+            var lock = document.getElementById('skm_LockPane');
+            if (lock)
+                lock.className = 'LockOn';
+            lock.innerHTML = str;
+        }
+
+        function lockOff()
+        {
+            var lock = document.getElementById('skm_LockPane');
+            lock.className = 'LockOff';
+        }
+
+        function ToggleConnectionClicked() {
+            if (SocketCreated && (ws.readyState == 0 || ws.readyState == 1)) {
+                lockOn("离开聊天室...");
+                SocketCreated = false;
+                isUserloggedout = true;
+                var msg = JSON.stringify({'from_id':20210001, 'to_id':10000001,'pattern':0,'type':0,'message':'logout'});
+                ws.send(msg);
+                ws.close();
+            } else if(document.getElementById("to_id").value == "请输入房间号!") {
+                Log("请输入房间号！");
+            } else {
+                lockOn("进入聊天室...");
+                Log("准备连接到聊天服务器 ...");
+                var pattern;
+                $('input:radio').each(function () {
+                    if(this.checked){
+                        pattern=$(this).val()
+                    }
+                })
+
+                console.log(typeof(pattern),pattern)
+
+
+                task_id = pattern==0?document.getElementById("to_id").value:0;
+                user_id = document.getElementById("from_id").value;
+                try {
+                    if ("WebSocket" in window) {
+                        ws = new WebSocket(
+                            'ws://localhost:8088/webSocket/INFO={"task_id":"'+ task_id + '","user_id":"' + user_id+ '"}');
+                    }
+                    else if("MozWebSocket" in window) {
+                        ws = new MozWebSocket(
+                            'ws://localhost:8088/webSocket/INFO={"task_id":"'+ task_id + '","user_id":"' + user_id + '"}');
+                    }
+                    SocketCreated = true;
+                    isUserloggedout = false;
+                } catch (ex) {
+                    Log(ex, "ERROR");
+                    return;
+                }
+                document.getElementById("ToggleConnection").innerHTML = "退出房间";
+                ws.onopen = WSonOpen;
+                ws.onmessage = WSonMessage;
+                ws.onclose = WSonClose;
+                ws.onerror = WSonError;
+            }
+        };
+
+
+        function WSonOpen() {
+            lockOff();
+            Log("连接已经建立。", "OK");
+            $("#SendDataContainer").show();
+            var msg = JSON.stringify({'from_id':20210001, 'to_id':10000001,'pattern':0,'type':0,'message':'open'})
+            //ws.send(msg);
+        };
+
+        function WSonMessage(event) {
+            Log(event.data, "INFO");
+        };
+
+        function WSonClose() {
+            lockOff();
+            if (isUserloggedout)
+                Log("您已离开了房间！", "INFO");
+            document.getElementById("ToggleConnection").innerHTML = "连接";
+            $("#SendDataContainer").hide();
+        };
+
+        function WSonError() {
+            lockOff();
+            Log("远程连接中断。", "ERROR");
+        };
+
+        function SendDataClicked() {
+            var pattern1;
+            $('input:radio').each(function () {
+                if(this.checked){
+                    pattern1=$(this).val()
+                }
+            })
+            console.log(pattern1)
+            if (document.getElementById("DataToSend").value.trim() != "") {
+                var msg = JSON.stringify({'from_id':document.getElementById("from_id").value, 'to_id':document.getElementById("to_id").value,'pattern':pattern1,'type':0,'message':document.getElementById("DataToSend").value})
+                ws.send(msg);
+                console.log(msg);
+                document.getElementById("DataToSend").value = "";
+            }
+        };
+
+
+        function Log(Text, MessageType) {
+            document.getElementById("LogContainer").innerHTML = document.getElementById("LogContainer").innerHTML + Text + "<br />";
+            var LogContainer = document.getElementById("LogContainer");
+            LogContainer.scrollTop = LogContainer.scrollHeight;
+        };
+
+
+    </script>
+</head>
+<body>
+<div id="skm_LockPane" class="LockOff"></div>
+<form id="form1" runat="server">
+    <h1>小小网页聊天室</h1>
+    <br />
+    <div>
+        按下进入按钮，会通过WebSocket发起一个到聊天浏览器的连接。
+    </div>
+    任务号: <input type="text" id="to_id" value="10000001" />
+    群聊:   <input type="radio" id="isGroup" value="1" name="select" checked="checked"/>
+    私聊:   <input type="radio" id="isPrivate" value="0" name="select"/>
+    用户名: <input type="text" id="from_id" value="20210001"/>
+    <button id='ToggleConnection' type="button" onclick='ToggleConnectionClicked();'>进入群聊</button>
+    <br />
+    <br />
+    <div id='LogContainer' class='container'></div>
+    <br />
+    <div id='SendDataContainer'>
+        消息内容：<input type="text" id="DataToSend" size="40" />
+        <button id='SendData' type="button" onclick='SendDataClicked();'>发送</button>
+    </div>
+    <br />
+</form>
+</body>
+</html>
